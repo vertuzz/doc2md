@@ -7,6 +7,20 @@ tables, headings, lists, and basic bold/italic formatting.
 
 It is designed for scripting, batch conversion, and dependency use in Python projects.
 
+## Why Markdown
+
+The main use case is preparing old `.doc` files for LLM-based extraction pipelines.
+Many structured-information parsers work better, cheaper, and more predictably when
+they receive compact Markdown instead of raw binary documents or heavyweight office
+exports. `doc2markdown` is meant to be the small first step in that pipeline: turn
+legacy Word documents into readable text and simple Markdown tables without installing
+LibreOffice, running a document server, or adding runtime dependencies.
+
+This is intentionally not a LibreOffice replacement. It does not try to reproduce page
+layout perfectly. The goal is to preserve enough document structure for downstream
+LLM parsers to extract names, dates, financial rows, clauses, tables, and other
+structured facts at low cost.
+
 ## Install and Run
 
 Run directly from a GitHub repository with `uvx`:
