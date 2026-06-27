@@ -90,7 +90,7 @@ def main() -> int:
             print(f"skip {filename}: already exists")
             skipped += 1
             continue
-        request = Request(url, headers={"User-Agent": "doc2markdown-sample-downloader/0.1"})
+        request = Request(url, headers={"User-Agent": "doc2md-sample-downloader/0.1"})
         try:
             with urlopen(request, timeout=30) as response:
                 data = response.read()

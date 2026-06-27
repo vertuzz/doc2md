@@ -1,9 +1,9 @@
 """Command line interface and public conversion helpers.
 
 Usage:
-    doc2markdown INPUT.doc            # write Markdown to stdout
-    doc2markdown INPUT.doc -o out.md  # write to a file
-    doc2markdown INPUT.doc --plain    # text + tables, no inline markup
+    doc2md INPUT.doc            # write Markdown to stdout
+    doc2md INPUT.doc -o out.md  # write to a file
+    doc2md INPUT.doc --plain    # text + tables, no inline markup
 
 Warnings are written to stderr; a non-zero exit code signals a fatal error.
 Zero third-party dependencies; stdlib only.
@@ -277,7 +277,7 @@ def convert_path(
 
 
 def convert(path: str | PathLike[str], plain: bool = False, warn: WarnFunc | None = None) -> str:
-    """Backward-compatible alias for :func:`convert_path`."""
+    """Alias for :func:`convert_path`."""
     return convert_path(path, plain=plain, warn=warn)
 
 
@@ -289,7 +289,7 @@ def _write_stdout(text: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="doc2markdown",
+        prog="doc2md",
         description="Convert Word 97-2003 .doc to text/Markdown.",
     )
     parser.add_argument("input", help="path to a .doc file")

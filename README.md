@@ -1,6 +1,6 @@
-# doc2markdown
+# doc2md
 
-`doc2markdown` is a small, zero-runtime-dependency converter for legacy Microsoft Word
+`doc2md` is a small, zero-runtime-dependency converter for legacy Microsoft Word
 97-2003 `.doc` files. It reads the OLE2/Compound File Binary container directly and
 extracts the main document text as Markdown, including a best-effort rendering of
 tables, headings, lists, and basic bold/italic formatting.
@@ -12,7 +12,7 @@ It is designed for scripting, batch conversion, and dependency use in Python pro
 The main use case is preparing old `.doc` files for LLM-based extraction pipelines.
 Many structured-information parsers work better, cheaper, and more predictably when
 they receive compact Markdown instead of raw binary documents or heavyweight office
-exports. `doc2markdown` is meant to be the small first step in that pipeline: turn
+exports. `doc2md` is meant to be the small first step in that pipeline: turn
 legacy Word documents into readable text and simple Markdown tables without installing
 LibreOffice, running a document server, or adding runtime dependencies.
 
@@ -26,42 +26,36 @@ structured facts at low cost.
 Run directly from a GitHub repository with `uvx`:
 
 ```bash
-uvx --from git+https://github.com/<owner>/<repo>.git doc2markdown input.doc -o output.md
+uvx --from git+https://github.com/vertuzz/doc2md.git doc2md input.doc -o output.md
 ```
 
 Install as a persistent command-line tool:
 
 ```bash
-uv tool install --from git+https://github.com/<owner>/<repo>.git doc2markdown
-doc2markdown input.doc -o output.md
+uv tool install --from git+https://github.com/vertuzz/doc2md.git doc2md
+doc2md input.doc -o output.md
 ```
 
 Use it as a project dependency:
 
 ```bash
-uv add "doc2markdown @ git+https://github.com/<owner>/<repo>.git"
+uv add "doc2md @ git+https://github.com/vertuzz/doc2md.git"
 ```
 
 Then call it from Python:
 
 ```python
-from doc2markdown import convert_path
+from doc2md import convert_path
 
 markdown = convert_path("input.doc")
-```
-
-The old command name is also kept as a compatibility alias:
-
-```bash
-doctotext input.doc -o output.md
 ```
 
 ## CLI
 
 ```bash
-doc2markdown INPUT.doc
-doc2markdown INPUT.doc -o output.md
-doc2markdown INPUT.doc --plain
+doc2md INPUT.doc
+doc2md INPUT.doc -o output.md
+doc2md INPUT.doc --plain
 ```
 
 By default the command writes UTF-8 Markdown to stdout. With `-o/--output`, output is
@@ -71,7 +65,7 @@ inline markup for headings and emphasis, while table output remains Markdown-fri
 ## Python API
 
 ```python
-from doc2markdown import convert_bytes, convert_path
+from doc2md import convert_bytes, convert_path
 
 markdown = convert_path("legacy.doc")
 markdown_from_bytes = convert_bytes(doc_bytes)

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import struct
 
-from doc2markdown.docreader import DocReader
-from doc2markdown.formatting import Formatting, _toggle_on, decode_sprms
-from doc2markdown.ole2 import OLE2Reader
+from doc2md.docreader import DocReader
+from doc2md.formatting import Formatting, _toggle_on, decode_sprms
+from doc2md.ole2 import OLE2Reader
 
 from cfb import build_cfb
 

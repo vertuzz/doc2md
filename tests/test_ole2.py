@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from doc2markdown.ole2 import OLE2Reader, OLEError
+from doc2md.ole2 import OLE2Reader, OLEError
 
 from cfb import build_cfb
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-import doc2markdown
+import doc2md
 
 
 class _Pap:
@@ -32,6 +32,6 @@ class _ResidualTableFmt:
 def test_residual_table_paragraphs_keep_their_cp_coordinates():
     doc = SimpleNamespace(body="one\rtwo\r")
 
-    rendered = doc2markdown.render(doc, _ResidualTableFmt(), plain=False)
+    rendered = doc2md.render(doc, _ResidualTableFmt(), plain=False)
 
     assert rendered == "one\n\n**two**"

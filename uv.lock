@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "doc2markdown"
+name = "doc2md"
 version = "0.1.0"
 source = { editable = "." }
 

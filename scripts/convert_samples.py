@@ -6,10 +6,10 @@ from pathlib import Path
 import sys
 
 try:
-    import doc2markdown
+    import doc2md
 except ModuleNotFoundError:  # pragma: no cover - convenience for direct script use
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-    import doc2markdown
+    import doc2md
 
 
 def main() -> int:
@@ -32,7 +32,7 @@ def main() -> int:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         warnings: list[str] = []
         try:
-            markdown = doc2markdown.convert_path(doc_path, plain=args.plain, warn=warnings.append)
+            markdown = doc2md.convert_path(doc_path, plain=args.plain, warn=warnings.append)
             text = markdown + ("" if markdown.endswith("\n") else "\n")
             out_path.write_text(text, encoding="utf-8")
         except Exception as exc:  # pragma: no cover - batch script diagnostics

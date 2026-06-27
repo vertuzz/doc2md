@@ -1,7 +1,7 @@
 """Tests for table grouping, the column-count heuristic and Markdown rendering."""
 from __future__ import annotations
 
-from doc2markdown import tables
+from doc2md import tables
 
 
 def test_clean_cell_escapes_pipe_and_collapses_controls():
