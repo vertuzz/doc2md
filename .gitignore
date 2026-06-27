@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Local conversion inputs/outputs
+*.doc
+*.docx
+*.dot
+*.dotx
+downloaded-docs/
+markdown-output/
+samples/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
