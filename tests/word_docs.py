@@ -13,6 +13,13 @@ def make_fib(
     f_complex: bool = True,
     fc_min: int = 0,
     fc_mac: int = 0,
+    ccp_ftn: int = 0,
+    ccp_hdd: int = 0,
+    ccp_mcr: int = 0,
+    ccp_atn: int = 0,
+    ccp_edn: int = 0,
+    ccp_txbx: int = 0,
+    ccp_hdr_txbx: int = 0,
 ) -> bytes:
     b = bytearray(512)
     struct.pack_into("<HH", b, 0, 0xA5EC, 0x00C1)  # wIdent, nFib
@@ -23,7 +30,19 @@ def make_fib(
     struct.pack_into("<II", b, 0x18, fc_min, fc_mac)
     struct.pack_into("<H", b, 32, 14)  # csw
     struct.pack_into("<H", b, 62, 22)  # cslw after FibRgW97
-    struct.pack_into("<I", b, 76, ccp_text)  # ccpText at FibRgLw97 + 12
+    struct.pack_into(
+        "<8I",
+        b,
+        76,
+        ccp_text,
+        ccp_ftn,
+        ccp_hdd,
+        ccp_mcr,
+        ccp_atn,
+        ccp_edn,
+        ccp_txbx,
+        ccp_hdr_txbx,
+    )
     struct.pack_into("<H", b, 152, 34)  # cbRgFcLcb
     struct.pack_into("<iI", b, 418, fc_clx, lcb_clx)  # pair 33: fcClx/lcbClx
     return bytes(b)

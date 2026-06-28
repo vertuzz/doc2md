@@ -257,6 +257,10 @@ class _HTMLTextExtractor(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
         self.skip_depth = 0
+        self.table_depth = 0
+        self.current_table: list[list[str]] | None = None
+        self.current_row: list[str] | None = None
+        self.current_cell: list[str] | None = None
 
     def handle_starttag(self, tag: str, attrs) -> None:  # noqa: ANN001 - stdlib signature
         tag = tag.lower()
@@ -264,6 +268,14 @@ class _HTMLTextExtractor(HTMLParser):
             self.skip_depth += 1
             return
         if self.skip_depth:
+            return
+        if self.table_depth:
+            self._handle_table_starttag(tag)
+            return
+        if tag == "table":
+            self._append_break()
+            self.table_depth = 1
+            self.current_table = []
             return
         if tag == "br":
             self._append_break(single=True)
@@ -279,13 +291,81 @@ class _HTMLTextExtractor(HTMLParser):
             return
         if self.skip_depth:
             return
+        if self.table_depth:
+            self._handle_table_endtag(tag)
+            return
         if tag in self._block_tags:
             self._append_break()
 
     def handle_data(self, data: str) -> None:
         if self.skip_depth:
             return
+        if self.table_depth:
+            if self.current_cell is not None:
+                self.current_cell.append(data)
+            return
         self._append_text(data)
+
+    def _handle_table_starttag(self, tag: str) -> None:
+        if tag == "table":
+            self.table_depth += 1
+            return
+        if self.table_depth != 1:
+            return
+        if tag == "tr":
+            self.current_row = []
+        elif tag in {"td", "th"}:
+            if self.current_row is None:
+                self.current_row = []
+            self.current_cell = []
+        elif tag == "br" and self.current_cell is not None:
+            self.current_cell.append(" ")
+        elif tag in self._block_tags and self.current_cell is not None:
+            self.current_cell.append(" ")
+
+    def _handle_table_endtag(self, tag: str) -> None:
+        if tag == "table":
+            if self.table_depth > 1:
+                self.table_depth -= 1
+                return
+            self._close_table_row()
+            rendered = tables.render_markdown_table(self.current_table or [])
+            if rendered:
+                self.parts.append(rendered)
+                self._append_break()
+            self.table_depth = 0
+            self.current_table = None
+            self.current_row = None
+            self.current_cell = None
+            return
+
+        if self.table_depth != 1:
+            return
+        if tag in {"td", "th"}:
+            self._close_table_cell()
+        elif tag == "tr":
+            self._close_table_row()
+        elif tag in self._block_tags and self.current_cell is not None:
+            self.current_cell.append(" ")
+
+    def _close_table_cell(self) -> None:
+        if self.current_cell is None:
+            return
+        if self.current_row is None:
+            self.current_row = []
+        text = re.sub(r"\s+", " ", "".join(self.current_cell)).strip()
+        self.current_row.append(text)
+        self.current_cell = None
+
+    def _close_table_row(self) -> None:
+        self._close_table_cell()
+        if self.current_row is None:
+            return
+        if self.current_table is None:
+            self.current_table = []
+        if any(cell.strip() for cell in self.current_row):
+            self.current_table.append(self.current_row)
+        self.current_row = None
 
     def _append_text(self, text: str) -> None:
         text = re.sub(r"\s+", " ", text)

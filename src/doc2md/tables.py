@@ -46,6 +46,50 @@ def _chunk_by_row_markers(cells: list[str], ncols: int) -> list[list[str]] | Non
     return rows
 
 
+def _chunk_by_offset_row_markers(cells: list[str], ncols: int) -> list[list[str]] | None:
+    """Chunk rows when a short prefix precedes regular row terminator cells.
+
+    Some older Word layout tables store a title/caption in the first few cells
+    and then continue with rows shaped as ``ncols`` cells plus an empty cell
+    marker. LibreOffice treats those as normal rows; preserving the prefix keeps
+    the title while allowing the data area to be split into readable rows.
+    """
+    if ncols < 1:
+        return None
+    effective = _without_final_split_cell(cells)
+    group = ncols + 1
+    if len(effective) < group * 2:
+        return None
+
+    max_offset = min(len(effective) - group * 2, _MAX_COLS)
+    for offset in range(1, max_offset + 1):
+        rest = effective[offset:]
+        if len(rest) < group * 2 or len(rest) % group:
+            continue
+        rows: list[list[str]] = []
+        prefix = effective[:offset]
+        prefix_nonempty = [cell for cell in prefix if not _is_empty_cell(cell)]
+        if prefix_nonempty:
+            rows.append(prefix_nonempty)
+        valid = True
+        for start in range(0, len(rest), group):
+            row = rest[start : start + ncols]
+            terminator = rest[start + ncols]
+            if not _is_empty_cell(terminator):
+                valid = False
+                break
+            rows.append(row)
+        if not valid:
+            continue
+        data_rows = rows[1:] if prefix_nonempty else rows
+        if len(data_rows) < 2:
+            continue
+        if not any(any(not _is_empty_cell(cell) for cell in row) for row in data_rows):
+            continue
+        return rows
+    return None
+
+
 def clean_cell(text: str) -> str:
     """Clean a cell's text for Markdown: drop field instructions, collapse
     control characters to spaces, escape pipe characters."""
@@ -140,6 +184,8 @@ def detect_column_count(cells: list[str]) -> int:
     for ncols in range(1, min(m, _MAX_COLS) + 1):
         rows = _chunk_by_row_markers(cells, ncols)
         if rows is None:
+            rows = _chunk_by_offset_row_markers(cells, ncols)
+        if rows is None:
             continue
         n_rows = len(rows)
         if best_marker is None or n_rows > best_marker[0] or (
@@ -182,6 +228,8 @@ def chunk_cells(cells: list[str], ncols: int) -> list[list[str]]:
     if ncols <= 0:
         return []
     rows = _chunk_by_row_markers(cells, ncols)
+    if rows is None:
+        rows = _chunk_by_offset_row_markers(cells, ncols)
     if rows is not None:
         return rows
     if ncols >= total:
@@ -224,9 +272,15 @@ def chunk_segmented_cells(fragments: list[str]) -> list[list[str]] | None:
         if pending_before_first_row:
             fragment = "\r".join([*pending_before_first_row, fragment])
             pending_before_first_row.clear()
-        cells = _without_final_split_cell(fragment.split(C_CELL))
+        raw_cells = fragment.split(C_CELL)
+        cells = _without_final_split_cell(raw_cells)
         if cells:
-            rows.append(cells)
+            ncols = detect_column_count(raw_cells)
+            chunked = chunk_cells(raw_cells, ncols)
+            if len(chunked) > 1:
+                rows.extend(chunked)
+            else:
+                rows.append(cells)
 
     if marked_fragments < 2:
         return None
@@ -246,6 +300,23 @@ def render_markdown_table(rows: list[list[str]]) -> str:
     cleaned = [[clean_cell(c) for c in row] for row in rows]
     ncols = max(len(r) for r in cleaned)
     cleaned = [r + [""] * (ncols - len(r)) for r in cleaned]
+    keep_cols = [
+        idx
+        for idx in range(ncols)
+        if any(row[idx].strip() for row in cleaned)
+    ]
+    if keep_cols:
+        cleaned = [[row[idx] for idx in keep_cols] for row in cleaned]
+        ncols = len(keep_cols)
+    if ncols > _MAX_COLS:
+        lines = []
+        for row in cleaned:
+            trimmed = list(row)
+            while trimmed and not trimmed[-1].strip():
+                trimmed.pop()
+            if trimmed:
+                lines.append("\t".join(trimmed))
+        return "\n".join(lines)
     header = cleaned[0]
     body = cleaned[1:]
     sep = "| " + " | ".join("---" for _ in range(ncols)) + " |"

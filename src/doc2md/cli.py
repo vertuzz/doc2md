@@ -222,9 +222,15 @@ def _render_paragraph(
     return body
 
 
-def render(doc: DocReader, fmt: Formatting | None, plain: bool = False) -> str:
+def render(
+    doc: DocReader,
+    fmt: Formatting | None,
+    plain: bool = False,
+    body: str | None = None,
+    cp_offset: int = 0,
+) -> str:
     """Render a parsed Word document body to Markdown or plain text."""
-    body = doc.body
+    body = doc.body if body is None else body
     segs = _segments(body)
     out_parts: list[str] = []
 
@@ -232,9 +238,10 @@ def render(doc: DocReader, fmt: Formatting | None, plain: bool = False) -> str:
     n = len(segs)
     while i < n:
         mark_cp, text, start = segs[i]
-        if _in_table(text, mark_cp, fmt):
+        abs_mark_cp = mark_cp + cp_offset
+        if _in_table(text, abs_mark_cp, fmt):
             block: list[tuple[int, str, int]] = []
-            while i < n and _in_table(segs[i][1], segs[i][0], fmt):
+            while i < n and _in_table(segs[i][1], segs[i][0] + cp_offset, fmt):
                 block.append(segs[i])
                 i += 1
             if any(C_CELL in frag for _, frag, _ in block):
@@ -243,11 +250,17 @@ def render(doc: DocReader, fmt: Formatting | None, plain: bool = False) -> str:
                     out_parts.append(rendered)
             else:
                 for block_mark_cp, frag, block_start in block:
-                    cleaned = _render_paragraph(frag, block_start, block_mark_cp, fmt, plain)
+                    cleaned = _render_paragraph(
+                        frag,
+                        block_start + cp_offset,
+                        block_mark_cp + cp_offset,
+                        fmt,
+                        plain,
+                    )
                     if cleaned:
                         out_parts.append(cleaned)
         else:
-            cleaned = _render_paragraph(text, start, mark_cp, fmt, plain)
+            cleaned = _render_paragraph(text, start + cp_offset, abs_mark_cp, fmt, plain)
             if cleaned:
                 out_parts.append(cleaned)
             i += 1
@@ -269,7 +282,13 @@ def convert_bytes(data: bytes, plain: bool = False, warn: WarnFunc | None = None
     except Exception as exc:  # pragma: no cover - defensive
         warn(f"formatting parser failed ({exc}); continuing without tables/markup")
         fmt = None
-    return render(doc, fmt, plain)
+    rendered_parts = [render(doc, fmt, plain)]
+    for offset, story in doc.textbox_stories():
+        rendered = render(doc, fmt, plain, body=story, cp_offset=offset)
+        if rendered:
+            rendered_parts.append(rendered)
+    separator = "\n" if plain else "\n\n"
+    return separator.join(part for part in rendered_parts if part)
 
 
 def convert_path(

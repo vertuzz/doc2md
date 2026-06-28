@@ -38,6 +38,23 @@ def test_convert_bytes_reads_markdown_table():
     assert "| Revenue | 100 |" in text
 
 
+def test_convert_bytes_reads_textbox_story_tables():
+    main = "Main\r"
+    textbox = "TABLE I\rName\x07Value\x07\rAssets\x07100\x07\r"
+    doc_bytes = _make_complex_doc_bytes(
+        main + textbox,
+        ccp_text=len(main),
+        ccp_txbx=len(textbox),
+    )
+
+    text = doc2md.convert_bytes(doc_bytes)
+
+    assert text.startswith("Main")
+    assert "TABLE I" in text
+    assert "| Name | Value |" in text
+    assert "| Assets | 100 |" in text
+
+
 def test_main_writes_output_file(tmp_path):
     input_path = tmp_path / "simple.doc"
     output_path = tmp_path / "out.md"
@@ -59,6 +76,22 @@ def test_convert_bytes_reads_html_saved_as_doc():
 
     assert text == "Inside MCC\n\nTransforming Ourselves."
     assert any("HTML" in warning for warning in warnings)
+
+
+def test_convert_bytes_renders_html_tables_saved_as_doc():
+    html = (
+        b"<!doctype html><html><body><p>Before</p><table>"
+        b"<tr><th>Name</th><th>Value</th></tr>"
+        b"<tr><td>Assets</td><td>100</td></tr>"
+        b"</table><p>After</p></body></html>"
+    )
+
+    text = doc2md.convert_bytes(html)
+
+    assert "Before" in text
+    assert "| Name | Value |" in text
+    assert "| Assets | 100 |" in text
+    assert text.endswith("After")
 
 
 def test_convert_bytes_reads_docx_saved_as_doc():
@@ -106,11 +139,17 @@ def test_convert_bytes_empty_input_returns_empty():
     assert any("empty" in warning for warning in warnings)
 
 
-def _make_complex_doc_bytes(text: str) -> bytes:
+def _make_complex_doc_bytes(
+    text: str,
+    ccp_text: int | None = None,
+    ccp_txbx: int = 0,
+) -> bytes:
     encoded = text.encode("cp1252")
     text_off = 512
     fc_compressed = 0x40000000 | (2 * text_off)
     cp_count = len(text)
+    if ccp_text is None:
+        ccp_text = cp_count
 
     plc = bytearray()
     plc.extend((0).to_bytes(4, "little"))
@@ -123,6 +162,13 @@ def _make_complex_doc_bytes(text: str) -> bytes:
     clx.extend(len(plc).to_bytes(4, "little", signed=True))
     clx.extend(plc)
 
-    wd = bytearray(make_fib(cp_count, fc_clx=0, lcb_clx=len(clx)))
+    wd = bytearray(
+        make_fib(
+            ccp_text,
+            fc_clx=0,
+            lcb_clx=len(clx),
+            ccp_txbx=ccp_txbx,
+        )
+    )
     wd[text_off : text_off + len(encoded)] = encoded
     return build_cfb({"WordDocument": bytes(wd), "1Table": bytes(clx)})

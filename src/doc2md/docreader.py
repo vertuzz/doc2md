@@ -120,6 +120,34 @@ class DocReader:
             return 0, 0
         return struct.unpack_from("<iI", self.word_doc, base)
 
+    def textbox_stories(self) -> list[tuple[int, str]]:
+        """Return document textbox stories as ``(cp_offset, text)`` pairs.
+
+        The main story is rendered separately. Textboxes live after footnotes,
+        headers, annotations and endnotes in the full CP stream; keeping the CP
+        offset lets formatting/table lookups still address the original Word
+        coordinates.
+        """
+        start = (
+            self.ccp_text
+            + self.ccp_ftn
+            + self.ccp_hdd
+            + self.ccp_mcr
+            + self.ccp_atn
+            + self.ccp_edn
+        )
+        stories: list[tuple[int, str]] = []
+        if self.ccp_txbx > 0:
+            story = self.text[start : start + self.ccp_txbx]
+            if story.strip():
+                stories.append((start, story))
+        start += self.ccp_txbx
+        if self.ccp_hdr_txbx > 0:
+            story = self.text[start : start + self.ccp_hdr_txbx]
+            if story.strip():
+                stories.append((start, story))
+        return stories
+
     def _read_table_stream(self) -> bytes:
         if not self.ole.has_stream(self.table_name):
             # Some documents only emit one table stream; fall back to the other.

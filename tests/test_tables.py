@@ -28,6 +28,21 @@ def test_detect_column_count_row_terminator_shape():
     assert tables.chunk_cells(cells, 2) == [["Heading1", "Heading2"], ["A simple table", "Ooo"]]
 
 
+def test_detect_column_count_prefixed_row_terminator_shape():
+    cells = [
+        "Region", "", "", "",
+        "Argentina", "www.example/ar", "Guatemala", "www.example/gt", "",
+        "Australia", "www.example/au", "Jamaica", "www.example/jm", "", "",
+    ]
+
+    assert tables.detect_column_count(cells) == 4
+    assert tables.chunk_cells(cells, 4) == [
+        ["Region"],
+        ["Argentina", "www.example/ar", "Guatemala", "www.example/gt"],
+        ["Australia", "www.example/au", "Jamaica", "www.example/jm"],
+    ]
+
+
 def test_detect_column_count_financial_matrix_shape():
     cells = [
         "COLGATE", "", "", "",
@@ -97,3 +112,10 @@ def test_render_markdown_table_escapes_pipes_in_cells():
 
 def test_render_markdown_table_empty():
     assert tables.render_markdown_table([]) == ""
+
+
+def test_render_markdown_table_falls_back_for_overwide_layout_grid():
+    rows = [["h"] + [f"c{i}" for i in range(25)]]
+    out = tables.render_markdown_table(rows)
+    assert not out.startswith("|")
+    assert "\t" in out
