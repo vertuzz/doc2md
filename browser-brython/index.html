@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>doc2md Brython</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f3;
+        --ink: #171a1f;
+        --muted: #5d6470;
+        --line: #d8ddd4;
+        --panel: #ffffff;
+        --panel-2: #f0f5f2;
+        --accent: #107c6d;
+        --accent-dark: #075e52;
+        --warn: #9a5b00;
+        --danger: #ad2f2f;
+        --shadow: 0 18px 48px rgba(23, 26, 31, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--panel);
+        color: var(--ink);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 12px;
+        transition:
+          border-color 140ms ease,
+          background 140ms ease,
+          color 140ms ease;
+      }
+
+      button:hover {
+        border-color: #9fb2aa;
+      }
+
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      button.primary:hover {
+        background: var(--accent-dark);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .app {
+        width: min(1180px, calc(100vw - 32px));
+        min-height: 100vh;
+        margin: 0 auto;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 18px;
+        padding: 24px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(16, 124, 109, 0.18), rgba(224, 157, 44, 0.2)),
+          #fff;
+        border: 1px solid var(--line);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 18px rgba(16, 124, 109, 0.12);
+      }
+
+      .logo svg {
+        width: 22px;
+        height: 22px;
+        stroke: var(--accent-dark);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .source {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.3;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(300px, 0.86fr) minmax(420px, 1.14fr);
+        gap: 18px;
+        min-height: 0;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        min-width: 0;
+      }
+
+      .input-panel {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .dropzone {
+        min-height: 230px;
+        border: 1.5px dashed #aab8b0;
+        border-radius: 8px;
+        background: var(--panel-2);
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 26px;
+        transition:
+          border-color 140ms ease,
+          background 140ms ease;
+      }
+
+      .dropzone.is-dragging {
+        border-color: var(--accent);
+        background: #e4f2ee;
+      }
+
+      .dropzone input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .drop-content {
+        display: grid;
+        gap: 14px;
+        justify-items: center;
+      }
+
+      .drop-icon {
+        width: 62px;
+        height: 62px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      .drop-icon svg {
+        width: 32px;
+        height: 32px;
+        stroke: var(--accent-dark);
+      }
+
+      .drop-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .drop-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .check {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--muted);
+      }
+
+      .check input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .status {
+        min-height: 46px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fbfcfa;
+        color: var(--muted);
+        padding: 12px;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .status.error {
+        border-color: rgba(173, 47, 47, 0.45);
+        color: var(--danger);
+        background: #fff7f7;
+      }
+
+      .warnings {
+        display: none;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+        color: var(--warn);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .warnings.visible {
+        display: block;
+      }
+
+      .warnings ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      .output-panel {
+        display: grid;
+        grid-template-rows: auto minmax(360px, 1fr);
+        min-height: 0;
+      }
+
+      .output-toolbar {
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .output-title {
+        min-width: 0;
+      }
+
+      .filename {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 36vw;
+      }
+
+      .output-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      textarea {
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+        resize: none;
+        border: 0;
+        outline: 0;
+        padding: 18px;
+        color: var(--ink);
+        background: #fcfdfb;
+        font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .footer {
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .footer code {
+        color: var(--ink);
+      }
+
+      @media (max-width: 820px) {
+        .app {
+          width: min(100vw - 20px, 680px);
+          padding: 14px 0;
+        }
+
+        .topbar,
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar {
+          display: grid;
+          align-items: stretch;
+        }
+
+        .actions {
+          justify-content: start;
+        }
+
+        .workspace {
+          display: grid;
+        }
+
+        .filename {
+          max-width: 100%;
+        }
+
+        .output-toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .output-actions {
+          justify-content: start;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.14.3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.14.3/brython_stdlib.js"></script>
+  </head>
+  <body onload="brython({debug: 1})">
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 3.75h6.75L18 8v12.25H7z" />
+              <path d="M13.5 4v4.25h4.25" />
+              <path d="M8.75 12.25h6.5" />
+              <path d="M8.75 15.25h6.5" />
+              <path d="M8.75 18.25h4" />
+            </svg>
+          </div>
+          <div>
+            <h1>doc2md Brython</h1>
+            <div class="source">Source: GitHub via jsDelivr</div>
+          </div>
+        </div>
+        <nav class="actions" aria-label="Document actions">
+          <button id="sample-button" type="button">Load sample</button>
+        </nav>
+      </header>
+
+      <section class="workspace">
+        <section class="panel input-panel" aria-label="Document input">
+          <label class="dropzone" id="dropzone" for="file-input">
+            <input id="file-input" type="file" accept=".doc,.docx,.rtf,.html,.htm,application/msword" />
+            <span class="drop-content">
+              <span class="drop-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 15V4" />
+                  <path d="m7 9 5-5 5 5" />
+                  <path d="M5 15v3.25A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25V15" />
+                </svg>
+              </span>
+              <span>
+                <strong class="drop-title">Drop a Word file</strong>
+                <span class="drop-note">or click to choose one</span>
+              </span>
+            </span>
+          </label>
+
+          <div class="controls">
+            <label class="check">
+              <input id="plain-toggle" type="checkbox" />
+              Plain text
+            </label>
+            <button id="clear-button" type="button">Clear</button>
+          </div>
+
+          <div>
+            <div class="status" id="status">Waiting for Brython.</div>
+            <div class="warnings" id="warnings">
+              <strong>Warnings</strong>
+              <ul id="warning-list"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel output-panel" aria-label="Markdown output">
+          <div class="output-toolbar">
+            <div class="output-title">
+              <strong>Markdown</strong>
+              <div class="filename" id="filename">No file loaded</div>
+            </div>
+            <div class="output-actions">
+              <button id="copy-button" type="button" disabled>Copy</button>
+              <button id="download-button" class="primary" type="button" disabled>Download</button>
+            </div>
+          </div>
+          <textarea id="output" spellcheck="false" readonly></textarea>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <span id="runtime-label">Brython 3.14.3</span>
+        <span><code>convert_bytes(...)</code> runs in this tab.</span>
+      </footer>
+    </main>
+
+    <script type="text/python" src="./app.py"></script>
+  </body>
+</html>

@@ -52,6 +52,19 @@ from doc2md import convert_path
 markdown = convert_path("input.doc")
 ```
 
+## Browser Demo
+
+This repository also contains a static Brython wrapper in `browser-brython/`.
+GitHub Pages deploys that folder as the site root, so after Pages is enabled with
+the GitHub Actions source the browser demo is available at:
+
+```text
+https://vertuzz.github.io/doc2md/
+```
+
+The page loads Brython from jsDelivr and imports `doc2md` from this GitHub
+repository through jsDelivr; there is no bundled frontend build step.
+
 ## CLI
 
 ```bash
