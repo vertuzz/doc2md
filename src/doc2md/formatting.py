@@ -71,10 +71,11 @@ SPRM_CKUL = 0x2A3E  # underline style (Kul); 0 == none
 def _toggle_on(value: int) -> bool:
     """Interpret a ToggleOperand byte as the property being ON.
 
-    0x01 turns the property on; 0x81 toggles it (treated as on for direct
-    formatting where the inherited value is unknown). 0x00 and 0x80 are off.
+    0x01 turns the property on. 0x81 toggles the inherited value, which this
+    lightweight parser does not resolve, so it is not treated as an explicit ON.
+    0x00 and 0x80 are off.
     """
-    return value in (0x01, 0x81)
+    return value == 0x01
 
 
 @dataclass

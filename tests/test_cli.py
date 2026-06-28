@@ -5,6 +5,7 @@ from io import BytesIO
 import zipfile
 
 import doc2md
+from doc2md import cli
 
 from cfb import build_cfb
 from word_docs import make_fib, make_simple_doc_bytes
@@ -62,6 +63,43 @@ def test_main_writes_output_file(tmp_path):
 
     assert doc2md.main([str(input_path), "-o", str(output_path)]) == 0
     assert output_path.read_text(encoding="utf-8") == "Hello\n"
+
+
+def test_main_ignores_broken_stdout_pipe(tmp_path, monkeypatch):
+    input_path = tmp_path / "simple.doc"
+    input_path.write_bytes(make_simple_doc_bytes("Hello\rWorld\r"))
+
+    class BrokenStdout:
+        def __init__(self):
+            self.buffer = self
+
+        def write(self, _data):
+            raise BrokenPipeError()
+
+        def fileno(self):
+            raise OSError()
+
+    monkeypatch.setattr(cli.sys, "stdout", BrokenStdout())
+
+    assert doc2md.main([str(input_path)]) == 0
+
+
+def test_main_ignores_os_write_broken_pipe(tmp_path, monkeypatch):
+    input_path = tmp_path / "simple.doc"
+    input_path.write_bytes(make_simple_doc_bytes("Hello\rWorld\r"))
+
+    class PipeStdout:
+        def fileno(self):
+            return 1
+
+    def broken_write(_fd, _data):
+        raise BrokenPipeError()
+
+    monkeypatch.setattr(cli.sys, "stdout", PipeStdout())
+    monkeypatch.setattr(cli.os, "write", broken_write)
+    monkeypatch.setattr(cli, "_silence_stdout", lambda: None)
+
+    assert doc2md.main([str(input_path)]) == 0
 
 
 def test_convert_bytes_reads_html_saved_as_doc():

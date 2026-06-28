@@ -11,6 +11,8 @@ Zero third-party dependencies; stdlib only.
 from __future__ import annotations
 
 import argparse
+import errno
+import os
 from os import PathLike
 from pathlib import Path
 import sys
@@ -306,9 +308,48 @@ def convert(path: str | PathLike[str], plain: bool = False, warn: WarnFunc | Non
 
 
 def _write_stdout(text: str) -> None:
-    sys.stdout.buffer.write(text.encode("utf-8"))
+    data = text.encode("utf-8")
     if not text.endswith("\n"):
-        sys.stdout.buffer.write(b"\n")
+        data += b"\n"
+
+    try:
+        fd = sys.stdout.fileno()
+    except (AttributeError, OSError, ValueError):
+        _write_stdout_buffered(data)
+        return
+
+    view = memoryview(data)
+    while view:
+        try:
+            written = os.write(fd, view)
+        except OSError as exc:
+            if exc.errno in (errno.EPIPE, errno.EINVAL):
+                raise BrokenPipeError from exc
+            raise
+        if written <= 0:
+            raise BrokenPipeError
+        view = view[written:]
+
+
+def _write_stdout_buffered(data: bytes) -> None:
+    try:
+        sys.stdout.buffer.write(data)
+    except OSError as exc:
+        if exc.errno in (errno.EPIPE, errno.EINVAL):
+            raise BrokenPipeError from exc
+        raise
+
+
+def _silence_stdout() -> None:
+    """Prevent a second broken-pipe error during interpreter shutdown."""
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        try:
+            os.dup2(devnull, sys.stdout.fileno())
+        finally:
+            os.close(devnull)
+    except (AttributeError, OSError, ValueError):
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -346,7 +387,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: cannot write output: {exc}", file=sys.stderr)
             return 1
     else:
-        _write_stdout(text)
+        try:
+            _write_stdout(text)
+        except BrokenPipeError:
+            _silence_stdout()
+            return 0
     return 0
 
 

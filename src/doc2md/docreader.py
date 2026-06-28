@@ -179,7 +179,7 @@ class DocReader:
             return self._scrape()[: self.ccp_text]
         try:
             return self._decode_plcpcd(plc)
-        except (struct.error, IndexError, UnicodeError) as exc:
+        except (struct.error, IndexError, UnicodeError, ValueError) as exc:
             if not self.f_complex:
                 self._warn(f"piece table decode failed ({exc}); reading simple WordDocument text")
                 return self._decode_simple_text()

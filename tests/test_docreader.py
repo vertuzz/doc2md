@@ -74,6 +74,18 @@ def test_fallback_scrape_when_no_clx():
     assert any("CLX" in w or "scrape" in w for w in doc.warnings)
 
 
+def test_malformed_plcpcd_falls_back_to_scrape():
+    marker = b"MALFORMEDPLCPCDFALLBACK"
+    clx = b"\x02" + struct.pack("<i", 4) + b"\x00\x00\x00\x00"
+    wd = make_fib(ccp_text=1000, fc_clx=0, lcb_clx=len(clx)) + marker
+    cfb = build_cfb({"WordDocument": wd, "1Table": clx})
+
+    doc = DocReader(OLE2Reader(cfb))
+
+    assert marker.decode("ascii") in doc.body
+    assert any("piece table decode failed" in w for w in doc.warnings)
+
+
 def test_simple_utf16_text_without_clx():
     text = "Hi\r".encode("utf-16le")
     text_off = 512

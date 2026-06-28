@@ -35,7 +35,7 @@ def test_decode_sprms_truncated_tail_is_safe():
 
 def test_toggle_on_semantics():
     assert _toggle_on(0x01) is True
-    assert _toggle_on(0x81) is True
+    assert _toggle_on(0x81) is False
     assert _toggle_on(0x00) is False
     assert _toggle_on(0x80) is False
 
@@ -123,3 +123,47 @@ def test_pap_and_chp_extraction_synthetic():
     assert chp.bold is True
     assert chp.italic is True
     assert chp.underline is False
+
+
+def test_chp_toggle_operand_does_not_invent_inline_state():
+    ccp_text = 3
+    text = b"AB\r"
+    text_off = 512
+    base = 2 * text_off
+    fc_compressed = 0x40000000 | base
+
+    clx = bytearray(b"\x02") + struct.pack("<i", 16)
+    clx.extend(struct.pack("<II", 0, ccp_text))
+    pcd = bytearray(8)
+    struct.pack_into("<I", pcd, 2, fc_compressed)
+    clx.extend(pcd)
+    clx = bytes(clx)
+
+    chpx_bin = struct.pack("<II", 0, 2000) + struct.pack("<i", 3)
+    table = clx + chpx_bin
+    pairs = {
+        33: (0, len(clx)),
+        12: (len(clx), len(chpx_bin)),
+    }
+
+    wd = bytearray(_make_fib(ccp_text, pairs))
+    wd[text_off : text_off + len(text)] = text
+    wd.extend(b"\x00" * (2048 - len(wd)))
+
+    chp_page = bytearray(512)
+    struct.pack_into("<II", chp_page, 0, base, base + 2 * ccp_text)
+    chp_page[8] = 50
+    chp_page[511] = 1
+    chp_page[50] = 6
+    struct.pack_into("<HB", chp_page, 51, 0x0835, 0x81)
+    struct.pack_into("<HB", chp_page, 54, 0x0836, 0x81)
+    wd[1536:2048] = chp_page
+
+    cfb = build_cfb({"WordDocument": bytes(wd), "1Table": table})
+    doc = DocReader(OLE2Reader(cfb))
+    fmt = Formatting(doc)
+
+    chp = fmt.chp_for_cp(0)
+
+    assert chp.bold is False
+    assert chp.italic is False
