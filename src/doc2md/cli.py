@@ -18,6 +18,7 @@ from typing import Callable
 
 from . import tables
 from .docreader import DocError, DocReader
+from .fallback import convert_alternate_bytes
 from .formatting import Formatting
 from .ole2 import OLE2Reader, OLEError
 
@@ -250,12 +251,16 @@ def render(doc: DocReader, fmt: Formatting | None, plain: bool = False) -> str:
             if cleaned:
                 out_parts.append(cleaned)
             i += 1
-    return "\n\n".join(out_parts)
+    separator = "\n" if plain else "\n\n"
+    return separator.join(out_parts)
 
 
 def convert_bytes(data: bytes, plain: bool = False, warn: WarnFunc | None = None) -> str:
     """Convert Word 97-2003 ``.doc`` bytes to Markdown or plain text."""
     warn = warn or (lambda _msg: None)
+    alternate = convert_alternate_bytes(data, plain=plain, warn=warn)
+    if alternate is not None:
+        return alternate
     ole = OLE2Reader(data)
     doc = DocReader(ole, warn=warn)
     fmt: Formatting | None = None

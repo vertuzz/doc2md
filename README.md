@@ -3,7 +3,9 @@
 `doc2md` is a small, zero-runtime-dependency converter for legacy Microsoft Word
 97-2003 `.doc` files. It reads the OLE2/Compound File Binary container directly and
 extracts the main document text as Markdown, including a best-effort rendering of
-tables, headings, lists, and basic bold/italic formatting.
+tables, headings, lists, and basic bold/italic formatting. It also has lightweight
+fallbacks for common Word-compatible files that are saved with a `.doc` suffix but
+actually contain HTML, RTF, or OOXML/`.docx` bytes.
 
 It is designed for scripting, batch conversion, and dependency use in Python projects.
 
@@ -107,10 +109,11 @@ tested after a clean clone on Windows, macOS, and Linux.
 ## Scope and Limitations
 
 This project is a lightweight parser, not a full Word layout engine. It targets legacy
-binary `.doc` files, not `.docx`. It should preserve useful text and many tables, but
-complex layout tables, embedded objects, tracked changes, unusual encodings, and
-document features outside the main story may still need a heavier fallback such as
-LibreOffice for pixel-perfect or production-archival conversion.
+binary `.doc` files first, with text-only fallbacks for mislabelled HTML, RTF, and
+OOXML/`.docx` inputs. It should preserve useful text and many tables, but complex
+layout tables, embedded objects, tracked changes, unusual encodings, and document
+features outside the main story may still need a heavier fallback such as LibreOffice
+for pixel-perfect or production-archival conversion.
 
 ## License
 
