@@ -10,6 +10,7 @@ from browser import document, window
 
 GITHUB_SRC = "https://cdn.jsdelivr.net/gh/vertuzz/doc2md@main/src"
 COMPAT_SRC = "./pycompat"
+LEGACY_DOC_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
 
 state = {
@@ -172,6 +173,9 @@ def read_blob(blob, filename: str) -> None:
             decoded = base64.b64decode(payload)
             if isinstance(decoded, str):
                 decoded = decoded.encode("latin1")
+            if not is_legacy_doc(filename, decoded):
+                reject_unsupported_file(filename)
+                return
             state["data"] = decoded
             state["filename"] = filename
             convert_current()
@@ -195,6 +199,25 @@ def first_file(files):
         return files.item(0)
     except Exception:
         return files[0]
+
+
+def is_legacy_doc(filename: str, data: bytes) -> bool:
+    return filename.lower().endswith(".doc") and bytes_startswith(data, LEGACY_DOC_SIGNATURE)
+
+
+def reject_unsupported_file(filename: str) -> None:
+    state["data"] = None
+    state["filename"] = ""
+    state["markdown"] = ""
+    el("file-input").value = ""
+    el("filename").textContent = "No legacy .doc loaded"
+    el("output").value = ""
+    set_warnings([])
+    set_status(
+        f"{filename} was not converted. This page only accepts legacy Word 97-2003 binary .doc files.",
+        error=True,
+    )
+    update_buttons()
 
 
 def handle_file(file) -> None:

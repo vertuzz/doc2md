@@ -56,14 +56,13 @@ markdown = convert_path("input.doc")
 
 This repository also contains a static Brython wrapper in `browser-brython/`.
 GitHub Pages deploys that folder as the site root, so after Pages is enabled with
-the GitHub Actions source the browser demo is available at:
-
-```text
-https://vertuzz.github.io/doc2md/
-```
+the GitHub Actions source the browser demo is available at
+[https://vertuzz.github.io/doc2md/](https://vertuzz.github.io/doc2md/).
 
 The page loads Brython from jsDelivr and imports `doc2md` from this GitHub
-repository through jsDelivr; there is no bundled frontend build step.
+repository through jsDelivr; there is no bundled frontend build step. The browser
+page is intentionally limited to legacy Word 97-2003 binary `.doc` files, not
+`.docx`, `.docm`, or other modern Office formats.
 
 ## CLI
 

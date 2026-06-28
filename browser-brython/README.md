@@ -1,7 +1,8 @@
 # doc2md Brython demo
 
 Static browser wrapper for `doc2md.convert_bytes(...)`. It does not modify or
-bundle the Python package.
+bundle the Python package. The page accepts only legacy Word 97-2003 binary
+`.doc` files.
 
 ## Run
 
@@ -33,6 +34,6 @@ binary files.
 ## Notes
 
 Brython 3.14.3 does not ship `xml.etree.ElementTree`, so this wrapper includes a
-tiny import-time shim under `pycompat/`. Legacy OLE2 `.doc`, HTML, and RTF paths
-can run in the browser; the OOXML/`.docx` fallback will warn and return empty
-output unless a real XML parser is added later.
+tiny import-time shim under `pycompat/`. The browser UI rejects DOCX, DOCM, RTF,
+HTML, and other non-OLE2 inputs so the public page stays focused on legacy
+binary `.doc` conversion.

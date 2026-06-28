@@ -58,7 +58,33 @@
           color 140ms ease;
       }
 
+      a {
+        color: var(--accent-dark);
+      }
+
       button:hover {
+        border-color: #9fb2aa;
+      }
+
+      .button-link {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--panel);
+        color: var(--ink);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 12px;
+        transition:
+          border-color 140ms ease,
+          background 140ms ease,
+          color 140ms ease;
+      }
+
+      .button-link:hover {
         border-color: #9fb2aa;
       }
 
@@ -140,6 +166,28 @@
         align-items: center;
         justify-content: flex-end;
         gap: 8px;
+      }
+
+      .notice {
+        border: 1px solid rgba(16, 124, 109, 0.28);
+        border-left: 5px solid var(--accent);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 14px 16px;
+        color: var(--ink);
+        line-height: 1.45;
+        box-shadow: 0 8px 22px rgba(23, 26, 31, 0.07);
+      }
+
+      .notice strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 15px;
+      }
+
+      .notice span {
+        color: var(--muted);
+        font-size: 14px;
       }
 
       .workspace {
@@ -407,14 +455,20 @@
           </div>
         </div>
         <nav class="actions" aria-label="Document actions">
+          <a class="button-link" href="https://github.com/vertuzz/doc2md" target="_blank" rel="noreferrer">GitHub</a>
           <button id="sample-button" type="button">Load sample</button>
         </nav>
       </header>
 
+      <section class="notice" aria-label="Supported files">
+        <strong>Legacy DOC only.</strong>
+        <span>Use this page for old Word 97-2003 binary <code>.doc</code> files. Do not bring <code>.docx</code>, <code>.docm</code>, RTF, HTML, or other modern Office formats here.</span>
+      </section>
+
       <section class="workspace">
         <section class="panel input-panel" aria-label="Document input">
           <label class="dropzone" id="dropzone" for="file-input">
-            <input id="file-input" type="file" accept=".doc,.docx,.rtf,.html,.htm,application/msword" />
+            <input id="file-input" type="file" accept=".doc,application/msword" />
             <span class="drop-content">
               <span class="drop-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -424,8 +478,8 @@
                 </svg>
               </span>
               <span>
-                <strong class="drop-title">Drop a Word file</strong>
-                <span class="drop-note">or click to choose one</span>
+                <strong class="drop-title">Drop a legacy .doc file</strong>
+                <span class="drop-note">Word 97-2003 binary documents only</span>
               </span>
             </span>
           </label>
